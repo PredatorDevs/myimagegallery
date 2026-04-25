@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
@@ -93,18 +94,8 @@ class _GalleryPageState extends State<GalleryPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        flexibleSpace: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                Theme.of(context).colorScheme.primary,
-                Theme.of(context).colorScheme.primaryContainer,
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-        ),
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Colors.white,
         title: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -178,7 +169,7 @@ class _GalleryPageState extends State<GalleryPage> {
       padding: EdgeInsets.all(12),
       itemCount: images.length,
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
+        crossAxisCount: 4,
         crossAxisSpacing: 10,
         mainAxisSpacing: 10,
       ),
@@ -217,19 +208,7 @@ class _GalleryPageState extends State<GalleryPage> {
             child: Stack(
               children: [
                 Image.file(images[index], fit: BoxFit.cover),
-                // Overlay para mejor UX
-                Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.transparent,
-                        Colors.black.withOpacity(0.3),
-                      ],
-                    ),
-                  ),
-                ),
+                Container(color: Colors.black.withOpacity(0.22)),
               ],
             ),
           ),
@@ -289,22 +268,33 @@ class DetailPage extends StatelessWidget {
 
   const DetailPage({required this.image});
 
+  Future<void> _shareImage(BuildContext context) async {
+    try {
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [XFile(image.path)],
+          text: 'Mira esta imagen de mi galeria',
+          subject: 'Imagen compartida',
+        ),
+      );
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No se pudo compartir la imagen.'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        flexibleSpace: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                Theme.of(context).colorScheme.primary,
-                Theme.of(context).colorScheme.primaryContainer,
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-        ),
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Colors.white,
         title: Row(
           children: [
             Icon(Icons.image_rounded, size: 28, color: Colors.white),
@@ -318,6 +308,13 @@ class DetailPage extends StatelessWidget {
             ),
           ],
         ),
+        actions: [
+          IconButton(
+            tooltip: 'Compartir imagen',
+            onPressed: () => _shareImage(context),
+            icon: const Icon(Icons.share_rounded, color: Colors.white),
+          ),
+        ],
       ),
       body: Container(
         color: Colors.black87,
